@@ -369,8 +369,7 @@ class Notifier:
         token = self.cfg.airtable_api_token
         table_url = f"{self.cfg.airtable_endpoint}/{self.cfg.airtable_base_id}/{table_ref}"
         dedupe_field = self.cfg.airtable_field_execution_id
-        base_marker = str(payload.get("last_execution_id") or payload["idempotency_key"])
-        dedupe_value = f"{payload.get('event_type', 'event')}:{base_marker}"
+        dedupe_value = str(payload.get("last_execution_id") or payload["idempotency_key"]).strip()
 
         headers = {
             "Authorization": f"Bearer {token}",
@@ -393,12 +392,9 @@ class Notifier:
         if isinstance(find_data.get("records"), list) and len(find_data["records"]) > 0:
             return
 
-        event_type = str(payload.get("event_type", "unknown"))
         error_message = str(payload.get("error_message") or "").strip()
-        if error_message:
-            error_message = f"[{event_type}] {error_message}"
-        else:
-            error_message = f"[{event_type}] {payload.get('incident_key', '')}"
+        if not error_message:
+            error_message = str(payload.get("signature") or "")
 
         fields = {
             self.cfg.airtable_field_scenario_name: str(payload.get("scenario_name") or payload.get("scenario_id")),
@@ -485,6 +481,60 @@ def stable_hash(text: str) -> str:
     return hashlib.sha1(text.encode("utf-8")).hexdigest()[:20]
 
 
+def _iter_nodes(value: Any):
+    stack = [value]
+    while stack:
+        node = stack.pop()
+        yield node
+        if isinstance(node, dict):
+            for child in node.values():
+                stack.append(child)
+        elif isinstance(node, list):
+            for child in node:
+                stack.append(child)
+
+
+def find_first_string(value: Any, keys: Tuple[str, ...]) -> str:
+    keyset = set(keys)
+    for node in _iter_nodes(value):
+        if not isinstance(node, dict):
+            continue
+        for key in keys:
+            candidate = node.get(key)
+            if isinstance(candidate, str) and candidate.strip():
+                return candidate.strip()
+    # Fallback in case keys differ in case.
+    for node in _iter_nodes(value):
+        if not isinstance(node, dict):
+            continue
+        for key, candidate in node.items():
+            if str(key) in keyset and isinstance(candidate, str) and candidate.strip():
+                return candidate.strip()
+    return ""
+
+
+def find_first_scalar(value: Any, keys: Tuple[str, ...]) -> str:
+    for node in _iter_nodes(value):
+        if not isinstance(node, dict):
+            continue
+        for key in keys:
+            candidate = node.get(key)
+            if isinstance(candidate, (str, int, float)) and str(candidate).strip():
+                return str(candidate).strip()
+    return ""
+
+
+def prettify_module_name(value: str) -> str:
+    text = value.strip()
+    if not text:
+        return ""
+    # Common Make style: provider:module-action
+    if ":" in text:
+        text = text.split(":", 1)[0]
+    text = text.replace("_", " ").replace("-", " ").strip()
+    return " ".join(part.capitalize() for part in text.split())
+
+
 def derive_error_signature(log_item: Dict[str, Any], execution_detail: Optional[Dict[str, Any]]) -> Tuple[str, Dict[str, Any]]:
     parts: List[str] = []
     debug: Dict[str, Any] = {}
@@ -524,37 +574,32 @@ def derive_error_signature(log_item: Dict[str, Any], execution_detail: Optional[
 
 
 def extract_error_fields(log_item: Dict[str, Any], execution_detail: Optional[Dict[str, Any]]) -> Dict[str, str]:
-    module_name = ""
-    error_message = ""
-    error_code = ""
+    source: Dict[str, Any] = {"log": log_item}
+    if isinstance(execution_detail, dict):
+        source["execution_detail"] = execution_detail
+        execution = execution_detail.get("execution")
+        if isinstance(execution, dict):
+            source["execution"] = execution
+            maybe_error = execution.get("error")
+            if isinstance(maybe_error, dict):
+                source["execution_error"] = maybe_error
 
-    for key in ("moduleName", "module"):
-        val = log_item.get(key)
-        if isinstance(val, str) and val.strip():
-            module_name = val.strip()
-            break
+    module_name = find_first_string(source, ("moduleName", "module", "appName", "app", "provider", "service"))
+    error_message = find_first_string(
+        source,
+        ("errorMessage", "message", "detail", "description", "reason", "type"),
+    )
+    error_code = find_first_scalar(
+        source,
+        ("code", "errorCode", "statusCode", "httpCode", "status"),
+    )
+    if not error_code and error_message:
+        match = re.search(r"\[(\\d{3})\]", error_message)
+        if match:
+            error_code = match.group(1)
 
-    for key in ("errorMessage", "message", "error"):
-        val = log_item.get(key)
-        if isinstance(val, str) and val.strip():
-            error_message = val.strip()
-            break
-
-    execution = execution_detail.get("execution") if isinstance(execution_detail, dict) else None
-    if isinstance(execution, dict):
-        maybe_error = execution.get("error")
-        if isinstance(maybe_error, dict):
-            for key in ("moduleName", "module"):
-                val = maybe_error.get(key)
-                if not module_name and isinstance(val, str) and val.strip():
-                    module_name = val.strip()
-            for key in ("message", "type"):
-                val = maybe_error.get(key)
-                if not error_message and isinstance(val, str) and val.strip():
-                    error_message = val.strip()
-            val = maybe_error.get("code")
-            if isinstance(val, str) and val.strip():
-                error_code = val.strip()
+    if module_name:
+        module_name = prettify_module_name(module_name)
 
     return {
         "module_name": module_name,
@@ -628,6 +673,17 @@ def scenario_name(scenario: Dict[str, Any]) -> str:
     return f"scenario-{scenario.get('id', 'unknown')}"
 
 
+def ui_base_url(api_base_url: str) -> str:
+    # e.g. https://eu2.make.com/api/v2 -> https://eu2.make.com
+    return re.sub(r"/api(?:/v\\d+)?/?$", "", api_base_url.rstrip("/"))
+
+
+def make_execution_url(api_base_url: str, team_id: int, scenario_id: int, execution_id: str) -> str:
+    if not execution_id or execution_id.startswith("fallback-"):
+        return ""
+    return f"{ui_base_url(api_base_url)}/{team_id}/scenarios/{scenario_id}/logs/{execution_id}"
+
+
 def alert_payload(event_type: str, incident: Dict[str, Any], extra: Dict[str, Any]) -> Dict[str, Any]:
     payload = {
         "event_type": event_type,
@@ -644,6 +700,7 @@ def alert_payload(event_type: str, incident: Dict[str, Any], extra: Dict[str, An
         "error_message": incident.get("last_error_message", ""),
         "error_code": incident.get("last_error_code", ""),
         "detected_at": iso_utc_z(now_ms()),
+        "execution_url": incident.get("last_execution_url", ""),
     }
     payload.update(extra)
     return payload
@@ -748,6 +805,7 @@ def process() -> int:
                     "last_seen_ms": ts,
                     "last_alert_ms": 0,
                     "last_execution_id": exec_id,
+                    "last_execution_url": make_execution_url(cfg.base_url, cfg.team_id, sid, exec_id),
                     "occurrences": 1,
                     "reopen_count": 0,
                     "last_module_name": error_fields.get("module_name", ""),
@@ -762,6 +820,7 @@ def process() -> int:
             incident["scenario_name"] = sname
             incident["last_seen_ms"] = max(int(incident.get("last_seen_ms", 0)), ts)
             incident["last_execution_id"] = exec_id
+            incident["last_execution_url"] = make_execution_url(cfg.base_url, cfg.team_id, sid, exec_id)
             incident["occurrences"] = int(incident.get("occurrences", 0)) + 1
             incident["last_module_name"] = error_fields.get("module_name", "")
             incident["last_error_message"] = error_fields.get("error_message", "")
