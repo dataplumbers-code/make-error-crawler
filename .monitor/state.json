@@ -1,0 +1,12 @@
+{
+  "emitted_event_ids": {},
+  "incidents": {},
+  "last_poll_ms": 1772890356122,
+  "scenario_health": {
+    "8229235": {
+      "last_success_ms": 0
+    }
+  },
+  "seen_executions": {},
+  "version": 1
+}
