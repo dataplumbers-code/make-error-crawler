@@ -1,7 +1,26 @@
 {
-  "emitted_event_ids": {},
-  "incidents": {},
-  "last_poll_ms": 1772890991732,
+  "emitted_event_ids": {
+    "f05ce9393b72acb281f6": 1772891677835
+  },
+  "incidents": {
+    "8176516:9448b5553d0fee1223c8": {
+      "first_seen_ms": 1772891208781,
+      "incident_key": "8176516:9448b5553d0fee1223c8",
+      "last_alert_ms": 1772891677835,
+      "last_error_code": "",
+      "last_error_message": "",
+      "last_execution_id": "96576eb1adf248c5bae61b02ae9c6d13",
+      "last_module_name": "",
+      "last_seen_ms": 1772891208781,
+      "occurrences": 1,
+      "reopen_count": 0,
+      "scenario_id": 8176516,
+      "scenario_name": "Integration Airtable",
+      "signature": "9448b5553d0fee1223c8",
+      "status": "open"
+    }
+  },
+  "last_poll_ms": 1772891677835,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -145,9 +164,11 @@
       "last_success_ms": 0
     },
     "8810631": {
-      "last_success_ms": 0
+      "last_success_ms": 1772891213212
     }
   },
-  "seen_executions": {},
+  "seen_executions": {
+    "96576eb1adf248c5bae61b02ae9c6d13": 1772891208781
+  },
   "version": 1
 }
