@@ -133,6 +133,17 @@ def load_config() -> MonitorConfig:
             return os.environ[name]
         return file_cfg.get(name, default)
 
+    def get_int(name: str, default: int) -> int:
+        raw = get(name, default)
+        if raw is None:
+            return int(default)
+        if isinstance(raw, int):
+            return raw
+        text = str(raw).strip()
+        if not text:
+            return int(default)
+        return int(text)
+
     api_token = str(get("MAKE_API_TOKEN", "")).strip()
     if not api_token:
         raise ValueError("MAKE_API_TOKEN is required")
@@ -160,23 +171,23 @@ def load_config() -> MonitorConfig:
         airtable_field_timestamp=str(get("AIRTABLE_FIELD_TIMESTAMP", "fldXakRHe5xVEBZ0O")),
         airtable_field_execution_id=str(get("AIRTABLE_FIELD_EXECUTION_ID", "fldW7Hf90ljWjCpdX")),
         smtp_host=str(get("EMAIL_SMTP_HOST", "")).strip() or None,
-        smtp_port=int(get("EMAIL_SMTP_PORT", 587)),
+        smtp_port=get_int("EMAIL_SMTP_PORT", 587),
         smtp_username=str(get("EMAIL_SMTP_USERNAME", "")).strip() or None,
         smtp_password=str(get("EMAIL_SMTP_PASSWORD", "")).strip() or None,
         smtp_use_tls=str(get("EMAIL_SMTP_USE_TLS", "true")).lower() == "true",
         email_from=str(get("EMAIL_FROM", "")).strip() or None,
         email_to=email_to,
         include_warnings=str(get("INCLUDE_WARNINGS", "false")).lower() == "true",
-        initial_lookback_seconds=int(get("INITIAL_LOOKBACK_SECONDS", DEFAULT_INITIAL_LOOKBACK_SECONDS)),
-        overlap_seconds=int(get("OVERLAP_SECONDS", DEFAULT_OVERLAP_SECONDS)),
-        resolve_grace_seconds=int(get("RESOLVE_GRACE_SECONDS", DEFAULT_RESOLVE_GRACE_SECONDS)),
-        still_failing_suppression_seconds=int(
-            get("STILL_FAILING_SUPPRESSION_SECONDS", DEFAULT_STILL_FAILING_SUPPRESSION_SECONDS)
+        initial_lookback_seconds=get_int("INITIAL_LOOKBACK_SECONDS", DEFAULT_INITIAL_LOOKBACK_SECONDS),
+        overlap_seconds=get_int("OVERLAP_SECONDS", DEFAULT_OVERLAP_SECONDS),
+        resolve_grace_seconds=get_int("RESOLVE_GRACE_SECONDS", DEFAULT_RESOLVE_GRACE_SECONDS),
+        still_failing_suppression_seconds=get_int(
+            "STILL_FAILING_SUPPRESSION_SECONDS", DEFAULT_STILL_FAILING_SUPPRESSION_SECONDS
         ),
-        seen_execution_ttl_seconds=int(get("SEEN_EXECUTION_TTL_SECONDS", DEFAULT_SEEN_EXECUTION_TTL_SECONDS)),
-        timeout_seconds=int(get("HTTP_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS)),
-        max_per_page=int(get("MAX_PER_PAGE", DEFAULT_MAX_PER_PAGE)),
-        max_pages_per_scenario=int(get("MAX_PAGES_PER_SCENARIO", DEFAULT_MAX_PAGES_PER_SCENARIO)),
+        seen_execution_ttl_seconds=get_int("SEEN_EXECUTION_TTL_SECONDS", DEFAULT_SEEN_EXECUTION_TTL_SECONDS),
+        timeout_seconds=get_int("HTTP_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS),
+        max_per_page=get_int("MAX_PER_PAGE", DEFAULT_MAX_PER_PAGE),
+        max_pages_per_scenario=get_int("MAX_PAGES_PER_SCENARIO", DEFAULT_MAX_PAGES_PER_SCENARIO),
         scenario_allowlist=parse_csv_ints(get("SCENARIO_ALLOWLIST", "")),
         scenario_blocklist=parse_csv_ints(get("SCENARIO_BLOCKLIST", "")),
     )
