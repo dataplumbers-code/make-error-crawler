@@ -36,16 +36,15 @@ jobs:
         run: |
           mkdir -p .monitor
           if [ ! -f .monitor/state.json ]; then
-            cat > .monitor/state.json <<'JSON'
-            {
-              "version": 1,
-              "last_poll_ms": 0,
-              "seen_executions": {},
-              "incidents": {},
-              "scenario_health": {},
-              "emitted_event_ids": {}
-            }
-            JSON
+            printf '%s\n' \
+              '{' \
+              '  "version": 1,' \
+              '  "last_poll_ms": 0,' \
+              '  "seen_executions": {},' \
+              '  "incidents": {},' \
+              '  "scenario_health": {},' \
+              '  "emitted_event_ids": {}' \
+              '}' > .monitor/state.json
           fi
 
       - name: Run Make monitor
