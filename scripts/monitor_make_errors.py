@@ -134,6 +134,15 @@ def load_config() -> MonitorConfig:
             return os.environ[name]
         return file_cfg.get(name, default)
 
+    def get_str(name: str, default: str = "") -> str:
+        raw = get(name, default)
+        if raw is None:
+            return default
+        text = str(raw).strip()
+        if not text:
+            return default
+        return text
+
     def get_int(name: str, default: int) -> int:
         raw = get(name, default)
         if raw is None:
@@ -145,7 +154,7 @@ def load_config() -> MonitorConfig:
             return int(default)
         return int(text)
 
-    api_token = str(get("MAKE_API_TOKEN", "")).strip()
+    api_token = get_str("MAKE_API_TOKEN", "")
     if not api_token:
         raise ValueError("MAKE_API_TOKEN is required")
 
@@ -156,27 +165,27 @@ def load_config() -> MonitorConfig:
     email_to = parse_csv_strings(str(get("EMAIL_TO", "")).strip())
 
     return MonitorConfig(
-        base_url=str(get("MAKE_BASE_URL", DEFAULT_API_BASE)).rstrip("/"),
+        base_url=get_str("MAKE_BASE_URL", DEFAULT_API_BASE).rstrip("/"),
         api_token=api_token,
         team_id=int(team_id_raw),
-        alert_webhook_url=str(get("ALERT_WEBHOOK_URL", "")).strip() or None,
-        airtable_api_token=str(get("AIRTABLE_API_TOKEN", "")).strip() or None,
-        airtable_base_id=str(get("AIRTABLE_BASE_ID", "")).strip() or None,
-        airtable_table_id=str(get("AIRTABLE_TABLE_ID", "")).strip() or None,
-        airtable_table_name=str(get("AIRTABLE_TABLE_NAME", "")).strip() or None,
-        airtable_endpoint=str(get("AIRTABLE_ENDPOINT", DEFAULT_AIRTABLE_ENDPOINT)).rstrip("/"),
-        airtable_field_scenario_name=str(get("AIRTABLE_FIELD_SCENARIO_NAME", "fldQUxFUQeQGXPWpf")),
-        airtable_field_module_name=str(get("AIRTABLE_FIELD_MODULE_NAME", "fldKovncPBvCr6kWc")),
-        airtable_field_error_message=str(get("AIRTABLE_FIELD_ERROR_MESSAGE", "fld3S36GeS9l5dj9o")),
-        airtable_field_error_code=str(get("AIRTABLE_FIELD_ERROR_CODE", "fldcK6pp2AG4dV4BA")),
-        airtable_field_timestamp=str(get("AIRTABLE_FIELD_TIMESTAMP", "fldXakRHe5xVEBZ0O")),
-        airtable_field_execution_id=str(get("AIRTABLE_FIELD_EXECUTION_ID", "fldW7Hf90ljWjCpdX")),
-        smtp_host=str(get("EMAIL_SMTP_HOST", "")).strip() or None,
+        alert_webhook_url=get_str("ALERT_WEBHOOK_URL", "") or None,
+        airtable_api_token=get_str("AIRTABLE_API_TOKEN", "") or None,
+        airtable_base_id=get_str("AIRTABLE_BASE_ID", "") or None,
+        airtable_table_id=get_str("AIRTABLE_TABLE_ID", "") or None,
+        airtable_table_name=get_str("AIRTABLE_TABLE_NAME", "") or None,
+        airtable_endpoint=get_str("AIRTABLE_ENDPOINT", DEFAULT_AIRTABLE_ENDPOINT).rstrip("/"),
+        airtable_field_scenario_name=get_str("AIRTABLE_FIELD_SCENARIO_NAME", "fldQUxFUQeQGXPWpf"),
+        airtable_field_module_name=get_str("AIRTABLE_FIELD_MODULE_NAME", "fldKovncPBvCr6kWc"),
+        airtable_field_error_message=get_str("AIRTABLE_FIELD_ERROR_MESSAGE", "fld3S36GeS9l5dj9o"),
+        airtable_field_error_code=get_str("AIRTABLE_FIELD_ERROR_CODE", "fldcK6pp2AG4dV4BA"),
+        airtable_field_timestamp=get_str("AIRTABLE_FIELD_TIMESTAMP", "fldXakRHe5xVEBZ0O"),
+        airtable_field_execution_id=get_str("AIRTABLE_FIELD_EXECUTION_ID", "fldW7Hf90ljWjCpdX"),
+        smtp_host=get_str("EMAIL_SMTP_HOST", "") or None,
         smtp_port=get_int("EMAIL_SMTP_PORT", 587),
-        smtp_username=str(get("EMAIL_SMTP_USERNAME", "")).strip() or None,
-        smtp_password=str(get("EMAIL_SMTP_PASSWORD", "")).strip() or None,
-        smtp_use_tls=str(get("EMAIL_SMTP_USE_TLS", "true")).lower() == "true",
-        email_from=str(get("EMAIL_FROM", "")).strip() or None,
+        smtp_username=get_str("EMAIL_SMTP_USERNAME", "") or None,
+        smtp_password=get_str("EMAIL_SMTP_PASSWORD", "") or None,
+        smtp_use_tls=get_str("EMAIL_SMTP_USE_TLS", "true").lower() == "true",
+        email_from=get_str("EMAIL_FROM", "") or None,
         email_to=email_to,
         include_warnings=str(get("INCLUDE_WARNINGS", "false")).lower() == "true",
         initial_lookback_seconds=get_int("INITIAL_LOOKBACK_SECONDS", DEFAULT_INITIAL_LOOKBACK_SECONDS),
