@@ -92,7 +92,7 @@ jobs:
 
       - name: Commit state updates
         run: |
-          if git diff --quiet -- .monitor/state.json; then
+          if [ -z "$(git status --porcelain -- .monitor/state.json)" ]; then
             echo "No state changes"
             exit 0
           fi
