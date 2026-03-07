@@ -3,7 +3,7 @@ name: Make Scenario Error Monitor
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/2 * * * *"
+    - cron: "1-59/5 * * * *"
 
 concurrency:
   group: make-error-monitor
@@ -31,6 +31,9 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Heartbeat
+        run: date -u +"scheduled_run_utc=%Y-%m-%dT%H:%M:%SZ"
 
       - name: Ensure monitor state exists
         run: |
