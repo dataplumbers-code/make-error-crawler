@@ -7,20 +7,21 @@
       "first_seen_ms": 1772891208781,
       "incident_key": "8176516:9448b5553d0fee1223c8",
       "last_alert_ms": 1772891677835,
-      "last_error_code": "",
-      "last_error_message": "",
-      "last_execution_id": "96576eb1adf248c5bae61b02ae9c6d13",
+      "last_error_code": "3",
+      "last_error_message": "manual",
+      "last_execution_id": "e72370d3ff504e9790d40dd27dc18940",
+      "last_execution_url": "https://eu2.make.com/api/v2/1194158/scenarios/8176516/logs/e72370d3ff504e9790d40dd27dc18940",
       "last_module_name": "",
-      "last_seen_ms": 1772891208781,
-      "occurrences": 1,
+      "last_seen_ms": 1772893289032,
+      "occurrences": 3,
       "reopen_count": 0,
       "scenario_id": 8176516,
-      "scenario_name": "Integration Airtable",
+      "scenario_name": "Error test",
       "signature": "9448b5553d0fee1223c8",
       "status": "open"
     }
   },
-  "last_poll_ms": 1772893187199,
+  "last_poll_ms": 1772893317996,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -168,7 +169,9 @@
     }
   },
   "seen_executions": {
-    "96576eb1adf248c5bae61b02ae9c6d13": 1772891208781
+    "96576eb1adf248c5bae61b02ae9c6d13": 1772891208781,
+    "b6d7c03dc6b744e0b7b317d271037bfd": 1772893283664,
+    "e72370d3ff504e9790d40dd27dc18940": 1772893289032
   },
   "version": 1
 }
