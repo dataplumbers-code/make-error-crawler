@@ -267,17 +267,16 @@ class MakeApiClient:
 
         for _ in range(max_pages):
             params = {
-                "scenarioId": scenario_id,
                 "teamId": self.config.team_id,
                 "from": from_ms,
                 "to": to_ms,
                 "pg[offset]": offset,
                 "pg[limit]": max_per_page,
             }
-            data = self._request("GET", "/scenarios/logs", params=params)
+            data = self._request("GET", f"/scenarios/{scenario_id}/logs", params=params)
             logs = data.get("scenarioLogs")
             if not isinstance(logs, list):
-                raise RuntimeError(f"Unexpected response shape for /scenarios/logs scenario={scenario_id}")
+                raise RuntimeError(f"Unexpected response shape for /scenarios/{scenario_id}/logs")
             all_logs.extend(logs)
             if len(logs) < max_per_page:
                 break
@@ -285,8 +284,12 @@ class MakeApiClient:
 
         return all_logs
 
-    def get_execution(self, execution_id: int) -> Dict[str, Any]:
-        return self._request("GET", f"/executions/{execution_id}", params={"teamId": self.config.team_id})
+    def get_execution(self, scenario_id: int, execution_id: str) -> Dict[str, Any]:
+        return self._request(
+            "GET",
+            f"/scenarios/{scenario_id}/executions/{execution_id}",
+            params={"teamId": self.config.team_id},
+        )
 
 
 class Notifier:
@@ -568,13 +571,13 @@ def log_timestamp_ms(log_item: Dict[str, Any]) -> Optional[int]:
     return None
 
 
-def log_execution_id(log_item: Dict[str, Any]) -> Optional[int]:
+def log_execution_id(log_item: Dict[str, Any]) -> Optional[str]:
     for key in ("executionId", "id", "imtId"):
         value = log_item.get(key)
         if isinstance(value, int):
-            return value
-        if isinstance(value, str) and value.isdigit():
-            return int(value)
+            return str(value)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
     return None
 
 
@@ -704,7 +707,7 @@ def process() -> int:
                 continue
 
             if exec_id is None:
-                exec_id = -1 * ts
+                exec_id = f"fallback-{sid}-{ts}"
 
             exec_key = str(exec_id)
             if exec_key in state["seen_executions"]:
@@ -713,9 +716,9 @@ def process() -> int:
             state["seen_executions"][exec_key] = ts
 
             execution_detail: Optional[Dict[str, Any]] = None
-            if exec_id > 0:
+            if exec_id and not exec_id.startswith("fallback-"):
                 try:
-                    execution_detail = client.get_execution(exec_id)
+                    execution_detail = client.get_execution(sid, exec_id)
                 except Exception as exc:  # noqa: BLE001
                     print(f"WARN execution detail fetch failed exec_id={exec_id}: {exc}")
 
