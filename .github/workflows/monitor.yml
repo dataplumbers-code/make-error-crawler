@@ -86,9 +86,15 @@ jobs:
           SEEN_EXECUTION_TTL_SECONDS: ${{ vars.SEEN_EXECUTION_TTL_SECONDS }}
           SCENARIO_ALLOWLIST: ${{ vars.SCENARIO_ALLOWLIST }}
           SCENARIO_BLOCKLIST: ${{ vars.SCENARIO_BLOCKLIST }}
+          SCENARIO_FOLDER_ID: ${{ vars.SCENARIO_FOLDER_ID }}
           HTTP_TIMEOUT_SECONDS: ${{ vars.HTTP_TIMEOUT_SECONDS }}
           MAX_PER_PAGE: ${{ vars.MAX_PER_PAGE }}
           MAX_PAGES_PER_SCENARIO: ${{ vars.MAX_PAGES_PER_SCENARIO }}
+          MAKE_MIN_INTERVAL_MS: ${{ vars.MAKE_MIN_INTERVAL_MS }}
+          MAX_MAKE_CALLS_PER_RUN: ${{ vars.MAX_MAKE_CALLS_PER_RUN }}
+          MAX_SCENARIOS_PER_RUN: ${{ vars.MAX_SCENARIOS_PER_RUN }}
+          FETCH_EXECUTION_DETAILS: ${{ vars.FETCH_EXECUTION_DETAILS }}
+          AIRTABLE_SKIP_PREFETCH_DEDUPE: ${{ vars.AIRTABLE_SKIP_PREFETCH_DEDUPE }}
 
           MONITOR_STATE_FILE: .monitor/state.json
         run: python scripts/monitor_make_errors.py

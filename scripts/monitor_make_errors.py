@@ -32,6 +32,9 @@ DEFAULT_SEEN_EXECUTION_TTL_SECONDS = 7 * 24 * 60 * 60
 DEFAULT_MAX_PER_PAGE = 50
 DEFAULT_MAX_PAGES_PER_SCENARIO = 10
 MAKE_MAX_PAGE_LIMIT = 50
+DEFAULT_MAKE_MIN_INTERVAL_MS = 1200
+DEFAULT_MAX_MAKE_CALLS_PER_RUN = 40
+DEFAULT_MAX_SCENARIOS_PER_RUN = 25
 
 STATUS_SUCCESS = 1
 STATUS_WARNING = 2
@@ -77,6 +80,12 @@ class MonitorConfig:
     max_pages_per_scenario: int
     scenario_allowlist: List[int]
     scenario_blocklist: List[int]
+    scenario_folder_id: Optional[int]
+    make_min_interval_ms: int
+    max_make_calls_per_run: int
+    max_scenarios_per_run: int
+    fetch_execution_details: bool
+    airtable_skip_prefetch_dedupe: bool
 
 
 def now_ms() -> int:
@@ -154,12 +163,19 @@ def load_config() -> MonitorConfig:
             return int(default)
         return int(text)
 
+    def get_bool(name: str, default: bool) -> bool:
+        raw = get(name, "true" if default else "false")
+        text = str(raw).strip().lower()
+        if not text:
+            return default
+        return text in ("1", "true", "yes", "y", "on")
+
     api_token = get_str("MAKE_API_TOKEN", "")
     if not api_token:
         raise ValueError("MAKE_API_TOKEN is required")
 
     team_id_raw = get("MAKE_TEAM_ID", None)
-    if team_id_raw is None:
+    if team_id_raw is None or not str(team_id_raw).strip():
         raise ValueError("MAKE_TEAM_ID is required")
 
     email_to = parse_csv_strings(str(get("EMAIL_TO", "")).strip())
@@ -167,7 +183,7 @@ def load_config() -> MonitorConfig:
     return MonitorConfig(
         base_url=get_str("MAKE_BASE_URL", DEFAULT_API_BASE).rstrip("/"),
         api_token=api_token,
-        team_id=int(team_id_raw),
+        team_id=int(str(team_id_raw).strip()),
         alert_webhook_url=get_str("ALERT_WEBHOOK_URL", "") or None,
         airtable_api_token=get_str("AIRTABLE_API_TOKEN", "") or None,
         airtable_base_id=get_str("AIRTABLE_BASE_ID", "") or None,
@@ -187,7 +203,7 @@ def load_config() -> MonitorConfig:
         smtp_use_tls=get_str("EMAIL_SMTP_USE_TLS", "true").lower() == "true",
         email_from=get_str("EMAIL_FROM", "") or None,
         email_to=email_to,
-        include_warnings=str(get("INCLUDE_WARNINGS", "false")).lower() == "true",
+        include_warnings=get_bool("INCLUDE_WARNINGS", False),
         initial_lookback_seconds=get_int("INITIAL_LOOKBACK_SECONDS", DEFAULT_INITIAL_LOOKBACK_SECONDS),
         overlap_seconds=get_int("OVERLAP_SECONDS", DEFAULT_OVERLAP_SECONDS),
         resolve_grace_seconds=get_int("RESOLVE_GRACE_SECONDS", DEFAULT_RESOLVE_GRACE_SECONDS),
@@ -200,12 +216,22 @@ def load_config() -> MonitorConfig:
         max_pages_per_scenario=get_int("MAX_PAGES_PER_SCENARIO", DEFAULT_MAX_PAGES_PER_SCENARIO),
         scenario_allowlist=parse_csv_ints(get("SCENARIO_ALLOWLIST", "")),
         scenario_blocklist=parse_csv_ints(get("SCENARIO_BLOCKLIST", "")),
+        scenario_folder_id=(
+            get_int("SCENARIO_FOLDER_ID", 0) if str(get("SCENARIO_FOLDER_ID", "")).strip() else None
+        ),
+        make_min_interval_ms=max(0, get_int("MAKE_MIN_INTERVAL_MS", DEFAULT_MAKE_MIN_INTERVAL_MS)),
+        max_make_calls_per_run=max(1, get_int("MAX_MAKE_CALLS_PER_RUN", DEFAULT_MAX_MAKE_CALLS_PER_RUN)),
+        max_scenarios_per_run=max(1, get_int("MAX_SCENARIOS_PER_RUN", DEFAULT_MAX_SCENARIOS_PER_RUN)),
+        fetch_execution_details=get_bool("FETCH_EXECUTION_DETAILS", False),
+        airtable_skip_prefetch_dedupe=get_bool("AIRTABLE_SKIP_PREFETCH_DEDUPE", True),
     )
 
 
 class MakeApiClient:
     def __init__(self, config: MonitorConfig):
         self.config = config
+        self.call_count = 0
+        self.last_request_mono = 0.0
         self.session = requests.Session()
         self.session.headers.update(
             {
@@ -215,12 +241,26 @@ class MakeApiClient:
             }
         )
 
+    def _acquire_budget_slot(self) -> None:
+        if self.call_count >= self.config.max_make_calls_per_run:
+            raise RuntimeError(
+                f"Make call budget exhausted ({self.config.max_make_calls_per_run} calls/run)"
+            )
+        if self.config.make_min_interval_ms > 0 and self.last_request_mono > 0:
+            elapsed_ms = (time.monotonic() - self.last_request_mono) * 1000
+            sleep_ms = self.config.make_min_interval_ms - elapsed_ms
+            if sleep_ms > 0:
+                time.sleep(sleep_ms / 1000)
+
     def _request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         url = f"{self.config.base_url}{path}"
         max_attempts = 5
         base_delay = 1.0
 
         for attempt in range(1, max_attempts + 1):
+            self._acquire_budget_slot()
+            self.call_count += 1
+            self.last_request_mono = time.monotonic()
             try:
                 resp = self.session.request(
                     method,
@@ -376,21 +416,22 @@ class Notifier:
             "Content-Type": "application/json",
         }
 
-        esc = self._airtable_formula_escape(dedupe_value)
-        formula = f"{{{dedupe_field}}}='{esc}'"
-        find_resp = self._request_with_retry(
-            "GET",
-            table_url,
-            headers=headers,
-            params={"maxRecords": 1, "filterByFormula": formula},
-        )
-        try:
-            find_data = find_resp.json()
-        except ValueError as exc:
-            raise RuntimeError("airtable list response was not valid json") from exc
+        if not self.cfg.airtable_skip_prefetch_dedupe:
+            esc = self._airtable_formula_escape(dedupe_value)
+            formula = f"{{{dedupe_field}}}='{esc}'"
+            find_resp = self._request_with_retry(
+                "GET",
+                table_url,
+                headers=headers,
+                params={"maxRecords": 1, "filterByFormula": formula},
+            )
+            try:
+                find_data = find_resp.json()
+            except ValueError as exc:
+                raise RuntimeError("airtable list response was not valid json") from exc
 
-        if isinstance(find_data.get("records"), list) and len(find_data["records"]) > 0:
-            return
+            if isinstance(find_data.get("records"), list) and len(find_data["records"]) > 0:
+                return
 
         error_message = str(payload.get("error_message") or "").strip()
         if not error_message:
@@ -673,6 +714,22 @@ def scenario_name(scenario: Dict[str, Any]) -> str:
     return f"scenario-{scenario.get('id', 'unknown')}"
 
 
+def scenario_folder_id(scenario: Dict[str, Any]) -> Optional[int]:
+    direct = scenario.get("folderId") or scenario.get("folder_id") or scenario.get("imtFolderId")
+    if isinstance(direct, int):
+        return direct
+    if isinstance(direct, str) and direct.strip().isdigit():
+        return int(direct.strip())
+    folder_obj = scenario.get("folder")
+    if isinstance(folder_obj, dict):
+        val = folder_obj.get("id")
+        if isinstance(val, int):
+            return val
+        if isinstance(val, str) and val.strip().isdigit():
+            return int(val.strip())
+    return None
+
+
 def ui_base_url(api_base_url: str) -> str:
     # e.g. https://eu2.make.com/api/v2 -> https://eu2.make.com
     return re.sub(r"/api(?:/v\\d+)?/?$", "", api_base_url.rstrip("/"))
@@ -706,11 +763,16 @@ def alert_payload(event_type: str, incident: Dict[str, Any], extra: Dict[str, An
     return payload
 
 
-def should_track_scenario(scenario_id: int, cfg: MonitorConfig) -> bool:
+def should_track_scenario(scenario: Dict[str, Any], cfg: MonitorConfig) -> bool:
+    scenario_id = int(scenario["id"])
     if cfg.scenario_allowlist and scenario_id not in cfg.scenario_allowlist:
         return False
     if scenario_id in cfg.scenario_blocklist:
         return False
+    if cfg.scenario_folder_id is not None:
+        sid_folder = scenario_folder_id(scenario)
+        if sid_folder != cfg.scenario_folder_id:
+            return False
     return True
 
 
@@ -735,21 +797,32 @@ def process() -> int:
     notifier = Notifier(cfg)
 
     scenarios = client.list_scenarios()
-    tracked_scenarios = [s for s in scenarios if should_track_scenario(int(s["id"]), cfg)]
+    tracked_scenarios_all = [s for s in scenarios if should_track_scenario(s, cfg)]
+    tracked_scenarios = tracked_scenarios_all[: cfg.max_scenarios_per_run]
+    budget_exhausted = False
 
     alerts: List[Tuple[str, Dict[str, Any], str]] = []
 
+    scenarios_scanned_count = 0
     for scenario in tracked_scenarios:
         sid = int(scenario["id"])
         sname = scenario_name(scenario)
+        scenarios_scanned_count += 1
         scenario_state = state["scenario_health"].setdefault(str(sid), {"last_success_ms": 0})
-        logs = client.list_scenario_logs(
-            scenario_id=sid,
-            from_ms=from_ms,
-            to_ms=current_ms,
-            max_per_page=cfg.max_per_page,
-            max_pages=cfg.max_pages_per_scenario,
-        )
+        try:
+            logs = client.list_scenario_logs(
+                scenario_id=sid,
+                from_ms=from_ms,
+                to_ms=current_ms,
+                max_per_page=cfg.max_per_page,
+                max_pages=cfg.max_pages_per_scenario,
+            )
+        except RuntimeError as exc:
+            if "Make call budget exhausted" in str(exc):
+                print("WARN Make call budget exhausted while fetching logs; ending scenario scan early")
+                budget_exhausted = True
+                break
+            raise
 
         parsed_logs: List[Tuple[int, int, Dict[str, Any]]] = []
         for raw in logs:
@@ -783,11 +856,18 @@ def process() -> int:
             state["seen_executions"][exec_key] = ts
 
             execution_detail: Optional[Dict[str, Any]] = None
-            if exec_id and not exec_id.startswith("fallback-"):
+            if cfg.fetch_execution_details and exec_id and not exec_id.startswith("fallback-"):
                 try:
                     execution_detail = client.get_execution(sid, exec_id)
                 except Exception as exc:  # noqa: BLE001
-                    print(f"WARN execution detail fetch failed exec_id={exec_id}: {exc}")
+                    if "Make call budget exhausted" in str(exc):
+                        budget_exhausted = True
+                        print("WARN Make call budget exhausted while fetching execution detail")
+                        execution_detail = None
+                    else:
+                        print(f"WARN execution detail fetch failed exec_id={exec_id}: {exc}")
+                if budget_exhausted:
+                    break
 
             signature, _signature_debug = derive_error_signature(raw, execution_detail)
             error_fields = extract_error_fields(raw, execution_detail)
@@ -836,6 +916,9 @@ def process() -> int:
             last_alert_ms = int(incident.get("last_alert_ms", 0))
             if current_ms - last_alert_ms >= cfg.still_failing_suppression_seconds * 1000:
                 alerts.append(("still_failing", incident, str(exec_id)))
+
+        if budget_exhausted:
+            break
 
     for incident in state["incidents"].values():
         if incident.get("status") != "open":
@@ -892,9 +975,13 @@ def process() -> int:
         json.dumps(
             {
                 "scenarios_total": len(scenarios),
-                "scenarios_tracked": len(tracked_scenarios),
+                "scenarios_tracked_total": len(tracked_scenarios_all),
+                "scenarios_scanned_this_run": scenarios_scanned_count,
                 "alerts_sent": sent_count,
                 "incidents_open": open_count,
+                "make_call_count": client.call_count,
+                "make_call_budget": cfg.max_make_calls_per_run,
+                "make_budget_exhausted": budget_exhausted,
                 "poll_window_from": iso_utc(from_ms),
                 "poll_window_to": iso_utc(current_ms),
                 "state_file": str(state_path),
