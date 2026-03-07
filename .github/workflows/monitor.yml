@@ -1,0 +1,104 @@
+name: Make Scenario Error Monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/2 * * * *"
+
+concurrency:
+  group: make-error-monitor
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Ensure monitor state exists
+        run: |
+          mkdir -p .monitor
+          if [ ! -f .monitor/state.json ]; then
+            cat > .monitor/state.json <<'JSON'
+            {
+              "version": 1,
+              "last_poll_ms": 0,
+              "seen_executions": {},
+              "incidents": {},
+              "scenario_health": {},
+              "emitted_event_ids": {}
+            }
+            JSON
+          fi
+
+      - name: Run Make monitor
+        env:
+          MAKE_API_TOKEN: ${{ secrets.MAKE_API_TOKEN }}
+          MAKE_TEAM_ID: ${{ vars.MAKE_TEAM_ID }}
+          MAKE_BASE_URL: ${{ vars.MAKE_BASE_URL }}
+
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+
+          AIRTABLE_API_TOKEN: ${{ secrets.AIRTABLE_API_TOKEN }}
+          AIRTABLE_BASE_ID: ${{ vars.AIRTABLE_BASE_ID }}
+          AIRTABLE_TABLE_NAME: ${{ vars.AIRTABLE_TABLE_NAME }}
+          AIRTABLE_ENDPOINT: ${{ vars.AIRTABLE_ENDPOINT }}
+          AIRTABLE_FIELD_SCENARIO_NAME: ${{ vars.AIRTABLE_FIELD_SCENARIO_NAME }}
+          AIRTABLE_FIELD_MODULE_NAME: ${{ vars.AIRTABLE_FIELD_MODULE_NAME }}
+          AIRTABLE_FIELD_ERROR_MESSAGE: ${{ vars.AIRTABLE_FIELD_ERROR_MESSAGE }}
+          AIRTABLE_FIELD_ERROR_CODE: ${{ vars.AIRTABLE_FIELD_ERROR_CODE }}
+          AIRTABLE_FIELD_TIMESTAMP: ${{ vars.AIRTABLE_FIELD_TIMESTAMP }}
+          AIRTABLE_FIELD_EXECUTION_ID: ${{ vars.AIRTABLE_FIELD_EXECUTION_ID }}
+
+          EMAIL_SMTP_HOST: ${{ vars.EMAIL_SMTP_HOST }}
+          EMAIL_SMTP_PORT: ${{ vars.EMAIL_SMTP_PORT }}
+          EMAIL_SMTP_USERNAME: ${{ secrets.EMAIL_SMTP_USERNAME }}
+          EMAIL_SMTP_PASSWORD: ${{ secrets.EMAIL_SMTP_PASSWORD }}
+          EMAIL_SMTP_USE_TLS: ${{ vars.EMAIL_SMTP_USE_TLS }}
+          EMAIL_FROM: ${{ vars.EMAIL_FROM }}
+          EMAIL_TO: ${{ vars.EMAIL_TO }}
+
+          INCLUDE_WARNINGS: ${{ vars.INCLUDE_WARNINGS }}
+          INITIAL_LOOKBACK_SECONDS: ${{ vars.INITIAL_LOOKBACK_SECONDS }}
+          OVERLAP_SECONDS: ${{ vars.OVERLAP_SECONDS }}
+          RESOLVE_GRACE_SECONDS: ${{ vars.RESOLVE_GRACE_SECONDS }}
+          STILL_FAILING_SUPPRESSION_SECONDS: ${{ vars.STILL_FAILING_SUPPRESSION_SECONDS }}
+          SEEN_EXECUTION_TTL_SECONDS: ${{ vars.SEEN_EXECUTION_TTL_SECONDS }}
+          SCENARIO_ALLOWLIST: ${{ vars.SCENARIO_ALLOWLIST }}
+          SCENARIO_BLOCKLIST: ${{ vars.SCENARIO_BLOCKLIST }}
+          HTTP_TIMEOUT_SECONDS: ${{ vars.HTTP_TIMEOUT_SECONDS }}
+          MAX_PER_PAGE: ${{ vars.MAX_PER_PAGE }}
+          MAX_PAGES_PER_SCENARIO: ${{ vars.MAX_PAGES_PER_SCENARIO }}
+
+          MONITOR_STATE_FILE: .monitor/state.json
+        run: python scripts/monitor_make_errors.py
+
+      - name: Commit state updates
+        run: |
+          if git diff --quiet -- .monitor/state.json; then
+            echo "No state changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .monitor/state.json
+          git commit -m "chore: update monitor state"
+          git push
