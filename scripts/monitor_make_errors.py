@@ -29,8 +29,9 @@ DEFAULT_OVERLAP_SECONDS = 120
 DEFAULT_RESOLVE_GRACE_SECONDS = 180
 DEFAULT_STILL_FAILING_SUPPRESSION_SECONDS = 1800
 DEFAULT_SEEN_EXECUTION_TTL_SECONDS = 7 * 24 * 60 * 60
-DEFAULT_MAX_PER_PAGE = 200
+DEFAULT_MAX_PER_PAGE = 50
 DEFAULT_MAX_PAGES_PER_SCENARIO = 10
+MAKE_MAX_PAGE_LIMIT = 50
 
 STATUS_SUCCESS = 1
 STATUS_WARNING = 2
@@ -186,7 +187,7 @@ def load_config() -> MonitorConfig:
         ),
         seen_execution_ttl_seconds=get_int("SEEN_EXECUTION_TTL_SECONDS", DEFAULT_SEEN_EXECUTION_TTL_SECONDS),
         timeout_seconds=get_int("HTTP_TIMEOUT_SECONDS", DEFAULT_TIMEOUT_SECONDS),
-        max_per_page=get_int("MAX_PER_PAGE", DEFAULT_MAX_PER_PAGE),
+        max_per_page=max(1, min(get_int("MAX_PER_PAGE", DEFAULT_MAX_PER_PAGE), MAKE_MAX_PAGE_LIMIT)),
         max_pages_per_scenario=get_int("MAX_PAGES_PER_SCENARIO", DEFAULT_MAX_PAGES_PER_SCENARIO),
         scenario_allowlist=parse_csv_ints(get("SCENARIO_ALLOWLIST", "")),
         scenario_blocklist=parse_csv_ints(get("SCENARIO_BLOCKLIST", "")),
