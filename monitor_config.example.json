@@ -6,6 +6,7 @@
 
   "AIRTABLE_ENDPOINT": "https://api.airtable.com/v0",
   "AIRTABLE_BASE_ID": "appXXXXXXXXXXXXXX",
+  "AIRTABLE_TABLE_ID": "tblCVLHw7K0fyKHNt",
   "AIRTABLE_TABLE_NAME": "MakeScenarioAlerts",
   "AIRTABLE_FIELD_SCENARIO_NAME": "fldQUxFUQeQGXPWpf",
   "AIRTABLE_FIELD_MODULE_NAME": "fldKovncPBvCr6kWc",

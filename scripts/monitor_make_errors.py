@@ -47,6 +47,7 @@ class MonitorConfig:
 
     airtable_api_token: Optional[str]
     airtable_base_id: Optional[str]
+    airtable_table_id: Optional[str]
     airtable_table_name: Optional[str]
     airtable_endpoint: str
     airtable_field_scenario_name: str
@@ -149,6 +150,7 @@ def load_config() -> MonitorConfig:
         alert_webhook_url=str(get("ALERT_WEBHOOK_URL", "")).strip() or None,
         airtable_api_token=str(get("AIRTABLE_API_TOKEN", "")).strip() or None,
         airtable_base_id=str(get("AIRTABLE_BASE_ID", "")).strip() or None,
+        airtable_table_id=str(get("AIRTABLE_TABLE_ID", "")).strip() or None,
         airtable_table_name=str(get("AIRTABLE_TABLE_NAME", "")).strip() or None,
         airtable_endpoint=str(get("AIRTABLE_ENDPOINT", DEFAULT_AIRTABLE_ENDPOINT)).rstrip("/"),
         airtable_field_scenario_name=str(get("AIRTABLE_FIELD_SCENARIO_NAME", "fldQUxFUQeQGXPWpf")),
@@ -336,13 +338,12 @@ class Notifier:
         return value.replace("\\", "\\\\").replace("'", "\\'")
 
     def upsert_airtable_event(self, payload: Dict[str, Any]) -> None:
-        if not (self.cfg.airtable_api_token and self.cfg.airtable_base_id and self.cfg.airtable_table_name):
+        table_ref = self.cfg.airtable_table_id or self.cfg.airtable_table_name
+        if not (self.cfg.airtable_api_token and self.cfg.airtable_base_id and table_ref):
             return
 
         token = self.cfg.airtable_api_token
-        table_url = (
-            f"{self.cfg.airtable_endpoint}/{self.cfg.airtable_base_id}/{self.cfg.airtable_table_name}"
-        )
+        table_url = f"{self.cfg.airtable_endpoint}/{self.cfg.airtable_base_id}/{table_ref}"
         dedupe_field = self.cfg.airtable_field_execution_id
         base_marker = str(payload.get("last_execution_id") or payload["idempotency_key"])
         dedupe_value = f"{payload.get('event_type', 'event')}:{base_marker}"
