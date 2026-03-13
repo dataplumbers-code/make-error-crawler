@@ -65,7 +65,7 @@
       "status": "open"
     }
   },
-  "last_poll_ms": 1773392219509,
+  "last_poll_ms": 1773395511320,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -89,7 +89,7 @@
       "last_success_ms": 0
     },
     "4333099": {
-      "last_success_ms": 0
+      "last_success_ms": 1773394386430
     },
     "4355929": {
       "last_success_ms": 0
@@ -188,13 +188,13 @@
       "last_success_ms": 0
     },
     "8229235": {
-      "last_success_ms": 0
+      "last_success_ms": 1773394734050
     },
     "8249459": {
       "last_success_ms": 0
     },
     "8494935": {
-      "last_success_ms": 0
+      "last_success_ms": 1773394077856
     },
     "8677813": {
       "last_success_ms": 0
