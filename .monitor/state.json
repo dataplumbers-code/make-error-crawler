@@ -55,7 +55,7 @@
       "status": "open"
     }
   },
-  "last_poll_ms": 1774126640331,
+  "last_poll_ms": 1774128809208,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -208,8 +208,6 @@
       "last_success_ms": 0
     }
   },
-  "seen_executions": {
-    "1125f3f4268a4b8199123a4cf91c382c": 1773522547961
-  },
+  "seen_executions": {},
   "version": 1
 }
