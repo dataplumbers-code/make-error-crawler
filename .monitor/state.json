@@ -1,6 +1,25 @@
 {
-  "emitted_event_ids": {},
+  "emitted_event_ids": {
+    "e817297c2c5263fa76ba": 1777112888480
+  },
   "incidents": {
+    "4333099:9448b5553d0fee1223c8": {
+      "first_seen_ms": 1777112692047,
+      "incident_key": "4333099:9448b5553d0fee1223c8",
+      "last_alert_ms": 1777112888480,
+      "last_error_code": "3",
+      "last_error_message": "auto",
+      "last_execution_id": "e91b0d6c73f348f3b745c631ff042bfb",
+      "last_execution_url": "https://eu2.make.com/api/v2/1194158/scenarios/4333099/logs/e91b0d6c73f348f3b745c631ff042bfb",
+      "last_module_name": "",
+      "last_seen_ms": 1777112692047,
+      "occurrences": 1,
+      "reopen_count": 0,
+      "scenario_id": 4333099,
+      "scenario_name": "AW/M/4/New Template",
+      "signature": "9448b5553d0fee1223c8",
+      "status": "open"
+    },
     "8176516:9448b5553d0fee1223c8": {
       "first_seen_ms": 1772891208781,
       "incident_key": "8176516:9448b5553d0fee1223c8",
@@ -53,7 +72,7 @@
       "status": "open"
     }
   },
-  "last_poll_ms": 1777109770563,
+  "last_poll_ms": 1777112888480,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -206,6 +225,8 @@
       "last_success_ms": 0
     }
   },
-  "seen_executions": {},
+  "seen_executions": {
+    "e91b0d6c73f348f3b745c631ff042bfb": 1777112692047
+  },
   "version": 1
 }
