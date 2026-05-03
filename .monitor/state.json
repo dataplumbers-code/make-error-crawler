@@ -1,22 +1,45 @@
 {
-  "emitted_event_ids": {},
+  "emitted_event_ids": {
+    "0e69c28a8e103f6bc7b5": 1777829173955,
+    "5a88c2c6088fac1f81ce": 1777829173955,
+    "7c58d9d580365e62ffb6": 1777829173955,
+    "a814a636c3c32374ad8c": 1777829173955
+  },
   "incidents": {
     "4333099:9448b5553d0fee1223c8": {
       "first_seen_ms": 1777112692047,
       "incident_key": "4333099:9448b5553d0fee1223c8",
-      "last_alert_ms": 1777112888480,
+      "last_alert_ms": 1777829173955,
       "last_error_code": "3",
       "last_error_message": "auto",
-      "last_execution_id": "e91b0d6c73f348f3b745c631ff042bfb",
-      "last_execution_url": "https://eu2.make.com/api/v2/1194158/scenarios/4333099/logs/e91b0d6c73f348f3b745c631ff042bfb",
+      "last_execution_id": "217b8bb76f8147ffbe9b8e21b4e7bca9",
+      "last_execution_url": "https://eu2.make.com/api/v2/1194158/scenarios/4333099/logs/217b8bb76f8147ffbe9b8e21b4e7bca9",
       "last_module_name": "",
-      "last_seen_ms": 1777112692047,
-      "occurrences": 1,
+      "last_seen_ms": 1777827908263,
+      "occurrences": 3,
       "reopen_count": 0,
       "scenario_id": 4333099,
       "scenario_name": "AW/M/4/New Template",
       "signature": "9448b5553d0fee1223c8",
       "status": "open"
+    },
+    "7920094:9448b5553d0fee1223c8": {
+      "first_seen_ms": 1777827533234,
+      "incident_key": "7920094:9448b5553d0fee1223c8",
+      "last_alert_ms": 1777829173955,
+      "last_error_code": "3",
+      "last_error_message": "auto",
+      "last_execution_id": "f839fb8b73de4e0db99fa2d8a01b8e77",
+      "last_execution_url": "https://eu2.make.com/api/v2/1194158/scenarios/7920094/logs/f839fb8b73de4e0db99fa2d8a01b8e77",
+      "last_module_name": "",
+      "last_seen_ms": 1777827533234,
+      "occurrences": 1,
+      "reopen_count": 0,
+      "resolved_at_ms": 1777829173955,
+      "scenario_id": 7920094,
+      "scenario_name": "AW/A/11 - New Starter Form - Populate eSignature",
+      "signature": "9448b5553d0fee1223c8",
+      "status": "resolved"
     },
     "8176516:9448b5553d0fee1223c8": {
       "first_seen_ms": 1772891208781,
@@ -70,7 +93,7 @@
       "status": "open"
     }
   },
-  "last_poll_ms": 1777825550809,
+  "last_poll_ms": 1777829173955,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -172,7 +195,7 @@
       "last_success_ms": 0
     },
     "7920094": {
-      "last_success_ms": 0
+      "last_success_ms": 1777828007522
     },
     "8063784": {
       "last_success_ms": 0
@@ -223,6 +246,10 @@
       "last_success_ms": 0
     }
   },
-  "seen_executions": {},
+  "seen_executions": {
+    "217b8bb76f8147ffbe9b8e21b4e7bca9": 1777827908263,
+    "f58af3bc10844592ab2e01ecd94d9483": 1777827707126,
+    "f839fb8b73de4e0db99fa2d8a01b8e77": 1777827533234
+  },
   "version": 1
 }
