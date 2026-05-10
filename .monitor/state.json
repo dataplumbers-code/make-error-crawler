@@ -1,10 +1,5 @@
 {
-  "emitted_event_ids": {
-    "0e69c28a8e103f6bc7b5": 1777829173955,
-    "5a88c2c6088fac1f81ce": 1777829173955,
-    "7c58d9d580365e62ffb6": 1777829173955,
-    "a814a636c3c32374ad8c": 1777829173955
-  },
+  "emitted_event_ids": {},
   "incidents": {
     "4333099:9448b5553d0fee1223c8": {
       "first_seen_ms": 1777112692047,
@@ -93,7 +88,7 @@
       "status": "open"
     }
   },
-  "last_poll_ms": 1778430960149,
+  "last_poll_ms": 1778434555378,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -246,10 +241,6 @@
       "last_success_ms": 0
     }
   },
-  "seen_executions": {
-    "217b8bb76f8147ffbe9b8e21b4e7bca9": 1777827908263,
-    "f58af3bc10844592ab2e01ecd94d9483": 1777827707126,
-    "f839fb8b73de4e0db99fa2d8a01b8e77": 1777827533234
-  },
+  "seen_executions": {},
   "version": 1
 }
