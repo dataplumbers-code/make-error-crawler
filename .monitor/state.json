@@ -1,10 +1,12 @@
 {
-  "emitted_event_ids": {},
+  "emitted_event_ids": {
+    "2997bae8db655984b380": 1780442850948
+  },
   "incidents": {
     "4333099:9448b5553d0fee1223c8": {
       "first_seen_ms": 1777112692047,
       "incident_key": "4333099:9448b5553d0fee1223c8",
-      "last_alert_ms": 1777829173955,
+      "last_alert_ms": 1780442850948,
       "last_error_code": "3",
       "last_error_message": "auto",
       "last_execution_id": "217b8bb76f8147ffbe9b8e21b4e7bca9",
@@ -13,10 +15,11 @@
       "last_seen_ms": 1777827908263,
       "occurrences": 3,
       "reopen_count": 0,
+      "resolved_at_ms": 1780442850948,
       "scenario_id": 4333099,
       "scenario_name": "AW/M/4/New Template",
       "signature": "9448b5553d0fee1223c8",
-      "status": "open"
+      "status": "resolved"
     },
     "7920094:9448b5553d0fee1223c8": {
       "first_seen_ms": 1777827533234,
@@ -88,7 +91,7 @@
       "status": "open"
     }
   },
-  "last_poll_ms": 1780437049082,
+  "last_poll_ms": 1780442850948,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -112,7 +115,7 @@
       "last_success_ms": 0
     },
     "4333099": {
-      "last_success_ms": 1776715512048
+      "last_success_ms": 1780440451901
     },
     "4355929": {
       "last_success_ms": 0
@@ -211,13 +214,13 @@
       "last_success_ms": 0
     },
     "8229235": {
-      "last_success_ms": 1779816612630
+      "last_success_ms": 1780441103852
     },
     "8249459": {
       "last_success_ms": 1777920365179
     },
     "8494935": {
-      "last_success_ms": 1773513851805
+      "last_success_ms": 1780440990956
     },
     "8677813": {
       "last_success_ms": 0
