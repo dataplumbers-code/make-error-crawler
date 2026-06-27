@@ -1,7 +1,5 @@
 {
   "emitted_event_ids": {
-    "4238d78b5f33e2d861ae": 1781971577193,
-    "9bd9aa7b98becb5b488d": 1781971577193,
     "b27315b8908426fc58f7": 1782223222362,
     "fd7760dd9f94e39cb454": 1782223222362
   },
@@ -130,7 +128,7 @@
       "status": "resolved"
     }
   },
-  "last_poll_ms": 1782574761558,
+  "last_poll_ms": 1782578818074,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
