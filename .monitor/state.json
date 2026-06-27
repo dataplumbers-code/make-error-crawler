@@ -130,7 +130,7 @@
       "status": "resolved"
     }
   },
-  "last_poll_ms": 1782569426285,
+  "last_poll_ms": 1782574761558,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -290,8 +290,7 @@
     }
   },
   "seen_executions": {
-    "196c8c4a6c164cfebee1ef333b374012": 1782220745537,
-    "c449be5c6dd5401da6a0f1475865ab76": 1781969369430
+    "196c8c4a6c164cfebee1ef333b374012": 1782220745537
   },
   "version": 1
 }
