@@ -1,8 +1,7 @@
 {
   "emitted_event_ids": {
     "0690596b51d1e6b4486b": 1784128420431,
-    "4ff8789d4a3a8e80fe87": 1784134009059,
-    "ff9cbaa6134c04f50355": 1784110866229
+    "4ff8789d4a3a8e80fe87": 1784134009059
   },
   "incidents": {
     "4333099:9448b5553d0fee1223c8": {
@@ -165,7 +164,7 @@
       "status": "resolved"
     }
   },
-  "last_poll_ms": 1784710919933,
+  "last_poll_ms": 1784718958115,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -325,8 +324,7 @@
     }
   },
   "seen_executions": {
-    "a00049aaae684d1fa4fa1e1f0887a562": 1784124043420,
-    "d8592f64b8734d5aba8771e9ccca41ad": 1784108714233
+    "a00049aaae684d1fa4fa1e1f0887a562": 1784124043420
   },
   "version": 1
 }
