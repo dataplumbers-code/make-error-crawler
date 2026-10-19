@@ -1,11 +1,5 @@
 {
-  "emitted_event_ids": {
-    "3b067c06d6fb9b3c6858": 1791828476960,
-    "3d605dd39a42b61222f8": 1791828476960,
-    "3d61726f9b7062da097f": 1791828476960,
-    "513464d9055d26c6e8f2": 1791828476960,
-    "9f13e56ce6e10c012ce7": 1791828476960
-  },
+  "emitted_event_ids": {},
   "incidents": {
     "3281003:9448b5553d0fee1223c8": {
       "first_seen_ms": 1791287320861,
@@ -202,7 +196,7 @@
       "status": "resolved"
     }
   },
-  "last_poll_ms": 1792420139549,
+  "last_poll_ms": 1792440458264,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -364,12 +358,6 @@
       "last_success_ms": 1792084996866
     }
   },
-  "seen_executions": {
-    "2a59d6b0713e49ebad677b3c5b044851": 1791821415984,
-    "2b4935c903274cc9930453f39206c78d": 1791821292701,
-    "4f527b4e218a4ed98b6fd24a5f49cacb": 1791821497593,
-    "686c640662f5436cb1b8666e438d1b4d": 1791821375487,
-    "e7eeea232e1a4b9bb96f6541d51a75c3": 1791821292685
-  },
+  "seen_executions": {},
   "version": 1
 }
