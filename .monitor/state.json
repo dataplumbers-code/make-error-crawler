@@ -1,10 +1,12 @@
 {
-  "emitted_event_ids": {},
+  "emitted_event_ids": {
+    "8e3b501a99d617394ae3": 1793033677131
+  },
   "incidents": {
     "3281003:9448b5553d0fee1223c8": {
       "first_seen_ms": 1791287320861,
       "incident_key": "3281003:9448b5553d0fee1223c8",
-      "last_alert_ms": 1791828476960,
+      "last_alert_ms": 1793033677131,
       "last_error_code": "3",
       "last_error_message": "auto",
       "last_execution_id": "4f527b4e218a4ed98b6fd24a5f49cacb",
@@ -13,10 +15,11 @@
       "last_seen_ms": 1791821497593,
       "occurrences": 6,
       "reopen_count": 0,
+      "resolved_at_ms": 1793033677131,
       "scenario_id": 3281003,
       "scenario_name": "AW/M/3/ReAudit",
       "signature": "9448b5553d0fee1223c8",
-      "status": "open"
+      "status": "resolved"
     },
     "4333099:9448b5553d0fee1223c8": {
       "first_seen_ms": 1777112692047,
@@ -196,7 +199,7 @@
       "status": "resolved"
     }
   },
-  "last_poll_ms": 1793010445665,
+  "last_poll_ms": 1793033677131,
   "scenario_health": {
     "3280946": {
       "last_success_ms": 0
@@ -205,7 +208,7 @@
       "last_success_ms": 0
     },
     "3281003": {
-      "last_success_ms": 1785411727485
+      "last_success_ms": 1793014700288
     },
     "3281058": {
       "last_success_ms": 0
@@ -226,7 +229,7 @@
       "last_success_ms": 0
     },
     "5533922": {
-      "last_success_ms": 1792511206796
+      "last_success_ms": 1793029165958
     },
     "5545741": {
       "last_success_ms": 0
@@ -319,7 +322,7 @@
       "last_success_ms": 0
     },
     "8229235": {
-      "last_success_ms": 1792510730471
+      "last_success_ms": 1793028237804
     },
     "8249459": {
       "last_success_ms": 1784131272603
